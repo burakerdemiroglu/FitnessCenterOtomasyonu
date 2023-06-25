@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -6,6 +8,8 @@ namespace Fitness_Center_Otomasyonu
 {
     public partial class Login : Form 
     {
+        SqlConnection baglanti = new SqlConnection(@"Data Source=BURAK\SQLEXPRESS;Initial Catalog=FitnessUygulaması;Integrated Security=True");
+
         public Login()
         {
             InitializeComponent();
@@ -24,19 +28,31 @@ namespace Fitness_Center_Otomasyonu
 
         private void simpleButton1_Click(object sender, EventArgs e)
         {
-            if(TxtKullaniciAdi.Text==""||TxtSifre.Text=="")
+            try
             {
-                MessageBox.Show("Eksik Bilgi");
+                baglanti.Open();
+                String sql = "select * from Kullanicilar where Kullanici=@Kullaniciadi AND Sifre=@Sifresi";
+                SqlParameter prm1 = new SqlParameter("@Kullaniciadi", TxtKullaniciAdi.Text.Trim());
+                SqlParameter prm2 = new SqlParameter("@Sifresi", TxtSifre.Text.Trim());
+                SqlCommand komut = new SqlCommand(sql, baglanti);
+                komut.Parameters.Add(prm1);
+                komut.Parameters.Add(prm2);
+
+                DataTable dt = new DataTable();
+                SqlDataAdapter da = new SqlDataAdapter(komut);
+                da.Fill(dt);
+
+                if (dt.Rows.Count > 0)
+                {
+                    AnaSayfa fr = new AnaSayfa();
+                    fr.Show();
+                    this.Hide();
+                }
             }
-            else if(TxtKullaniciAdi.Text=="Admin" && TxtSifre.Text == "123456")
+            catch (Exception)
             {
-                AnaSayfa log = new AnaSayfa();
-                log.Show();
-                this.Hide();
-            }
-            else
-            {
-                MessageBox.Show("Hatalaı Kullanıcı Adı veya Şifre");
+                baglanti.Close();
+                MessageBox.Show("Hatalı Giriş");
             }
         }
     }
